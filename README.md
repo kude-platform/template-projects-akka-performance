@@ -23,19 +23,35 @@ Akka example and homework code for the "Big Data Systems" lecture.
   mvn package
   ```
 
+3. Read the program documentation
+  ```
+  java -jar target/ddm-akka-1.0.jar
+  ```
+
 4. First run
   ```
   java -jar target/ddm-akka-1.0.jar master
   ```
 
-5. Distributed run
+5. Distributed run (locally on one machine)
   ```
   // Run a master
-  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar master -w 0 -h $(hostname -I)
-  // Run a worker
-  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar worker -w 1 -mh <master-host-ip> -h $(hostname -I)
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar master -w 0
+  // Run a worker (repeat for multiple workers)
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar worker -w 1 
   ```
-**Note that you need to substitute `<master-host-ip>` with the master's IP address. You can get it on Linux via running the command `hostname -I`.**
+
+`-Xms` and `-Xmx` are options for the Java Virtual Machine [to configure initial and maximum heap size](https://www.ibm.com/docs/en/sdk-java-technology/8?topic=options-xms). To ensure that your program runs on the Pi cluster, make it no greater than two gigabytes (`-Xmx=2048m` or `-Xmx=2g`).
+
+6. Distributed run (on multiple machines)
+  ```
+  // Run a master
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar master -w 0 -h <your-ip-address>
+  // Run a worker (repeat for multiple workers)
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar worker -w 1 -mh <master-host-ip> -h <your-ip-address>
+  ```
+
+**Note that you need to substitute `<your-ip-address>` and `<master-host-ip>` with your and the master's IP address, respectively.** You can use websites like [whatismyipaddress.com](https://whatismyipaddress.com/) or command-line utilities like `hostname -I` and `ifconfig` to get these IP addresses.
 
 `-Xms` and `-Xmx` are options for the Java Virtual Machine [to configure initial and maximum heap size](https://www.ibm.com/docs/en/sdk-java-technology/8?topic=options-xms). To ensure that your program runs on the Pi cluster, make it no greater than two gigabytes (`-Xmx=2048m` or `-Xmx=2g`).
 
