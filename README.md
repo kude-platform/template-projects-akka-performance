@@ -2,7 +2,7 @@
 Akka example and homework code for the "Big Data Systems" lecture.
 
 ## Requirements
-- Java >= 9, <= 17
+- Java Version >= 11
 - Maven Compiler Version >= 3.8.1
 
 ## Getting started
