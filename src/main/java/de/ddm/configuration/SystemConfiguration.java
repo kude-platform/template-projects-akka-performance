@@ -26,11 +26,15 @@ public class SystemConfiguration {
 
 	private String actorSystemName = "ddm";            // The name of this application
 
-	private int numWorkers = 1;                        // The number of workers to start locally; should be at least one if the algorithm is started standalone (otherwise there are no workers to run the application)
-
 	private boolean startPaused = false;               // Wait for some console input to start; useful, if we want to wait manually until all ActorSystems in the cluster are started (e.g. to avoid work stealing effects in performance evaluations)
 
 	private boolean hardMode = false;					// Solve the hard version of the task
+
+	private boolean runningInKubernetes = false;        // The application is running in Kubernetes
+
+	private int performanceTestNumberOfMessagesFromWorker = 100; // The number of messages to send in performance tests from a worker instance to the master
+
+	private int performanceTestMessageSizeInMB = 10; // The size of each message in performance tests in MB
 
 	private static String getDefaultHost() {
 		try {
@@ -46,9 +50,10 @@ public class SystemConfiguration {
 		this.port = commandMaster.port;
 		this.masterHost = commandMaster.host;
 		this.masterPort = commandMaster.port;
-		this.numWorkers = commandMaster.numWorkers;
 		this.startPaused = commandMaster.startPaused;
 		this.hardMode = commandMaster.hardMode;
+		this.runningInKubernetes = commandMaster.runningInKubernetes;
+		this.performanceTestMessageSizeInMB = commandMaster.performanceTestMessageSizeInMB;
 	}
 
 	public void update(CommandWorker commandWorker) {
@@ -57,13 +62,18 @@ public class SystemConfiguration {
 		this.port = commandWorker.port;
 		this.masterHost = commandWorker.masterhost;
 		this.masterPort = commandWorker.masterport;
-		this.numWorkers = commandWorker.numWorkers;
+		this.runningInKubernetes = commandWorker.runningInKubernetes;
+		this.performanceTestMessageSizeInMB = commandWorker.performanceTestMessageSizeInMB;
+		this.performanceTestNumberOfMessagesFromWorker = commandWorker.performanceTestNumberOfMessagesFromWorker;
 	}
 
 	public Config toAkkaConfig() {
 		return ConfigFactory.parseString("" +
 				"akka.remote.artery.canonical.hostname = \"" + this.host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + this.port + "\n" +
+						(this.runningInKubernetes ?
+								"akka.remote.artery.bind.hostname = \"" + getDefaultHost() + "\"\n" +
+										"akka.remote.artery.bind.port = " + this.port + "\n" : "") +
 				"akka.cluster.roles = [" + this.role + "]\n" +
 				"akka.cluster.seed-nodes = [\"akka://" + this.actorSystemName + "@" + this.masterHost + ":" + this.masterPort + "\"]")
 				.withFallback(ConfigFactory.load("application"));

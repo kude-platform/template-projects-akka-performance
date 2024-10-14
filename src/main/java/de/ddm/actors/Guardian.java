@@ -2,7 +2,11 @@ package de.ddm.actors;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.*;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.TimerScheduler;
 import akka.actor.typed.receptionist.Receptionist;
 import akka.actor.typed.receptionist.ServiceKey;
 import de.ddm.actors.patterns.Reaper;
@@ -67,7 +71,8 @@ public class Guardian extends AbstractBehavior<Guardian.Message> {
 
 		this.reaper = context.spawn(Reaper.create(), Reaper.DEFAULT_NAME);
 		this.master = this.isMaster() ? context.spawn(Master.create(), Master.DEFAULT_NAME) : null;
-		this.worker = context.spawn(Worker.create(), Worker.DEFAULT_NAME);
+		//this.worker = context.spawn(Worker.create(), Worker.DEFAULT_NAME);
+		this.worker = !this.isMaster() ? context.spawn(Worker.create(), Worker.DEFAULT_NAME) : null;
 
 		context.getSystem().receptionist().tell(Receptionist.register(guardianService, context.getSelf()));
 

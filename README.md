@@ -1,6 +1,24 @@
-# ddm-akka
-Akka example and homework code for the "Big Data Systems" lecture.
+# template-projects-akka-performance
 
+Akka template project to use for a performance test on the kude-platform.
+Forked from: https://github.com/UMR-Big-Data-Analytics/ddm-akka
+
+# Performance Test
+
+The performance test defines additional parameters for the master and worker nodes. The worker nodes can be
+configured to send a specific number of messages to the master node. This is done via the `-ptc` parameter. The size of
+the messages (in MB) can be configured via the `-pts` parameter. The following command can be used to run the
+performance
+test:
+
+  ```
+  // Run a master
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar master -pts 100
+  // Run a worker (repeat for multiple workers)
+  java -Xms2048m -Xmx2048m -jar target/ddm-akka-1.0.jar worker -ptc 1000 -pts 100
+  ``` 
+
+# Original Readme
 ## Requirements
 - Java Version >= 11
 - Maven Compiler Version >= 3.8.1
