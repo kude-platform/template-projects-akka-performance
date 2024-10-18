@@ -87,6 +87,7 @@ public class SystemConfiguration {
 		return ConfigFactory.parseString("" +
 				"akka.remote.artery.canonical.hostname = \"" + this.host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + this.port + "\n" +
+						"akka.coordinated-shutdown.exit-jvm = off\n" +
 				"akka.cluster.roles = [" + this.role + "]")
 				.withFallback(ConfigFactory.load("application"));
 	}
