@@ -18,4 +18,7 @@ public class CommandWorker extends Command {
 	@Parameter(names = {"-mp", "--masterport"}, description = "The port of the master", required = false)
 	int masterport = SystemConfiguration.DEFAULT_MASTER_PORT;
 
+	@Parameter(names = {"-ptc", "--performanceTestMessageCountWorker"}, description = "Number of messages that will be send in performance test from a worker to the master", required = false)
+	int performanceTestNumberOfMessagesFromWorker = SystemConfigurationSingleton.get().getPerformanceTestNumberOfMessagesFromWorker();
+
 }

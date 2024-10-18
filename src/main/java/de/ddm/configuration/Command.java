@@ -16,8 +16,15 @@ public abstract class Command {
 	@Parameter(names = {"-p", "--port"}, description = "This machines port that we use to bind this application against", required = false)
 	int port = this.getDefaultPort();
 
-	@Parameter(names = {"-w", "--numWorkers"}, description = "The number of workers (indexers/validators) to start locally; should be at least one if the algorithm is started standalone (otherwise there are no workers to run the discovery)", required = false)
-	int numWorkers = SystemConfigurationSingleton.get().getNumWorkers();
+	@Parameter(names = {"-kb", "--runningInKubernetes"}, description = "The application is running in Kubernetes", required = false, arity = 1)
+	boolean runningInKubernetes = SystemConfigurationSingleton.get().isRunningInKubernetes();
+
+	@Parameter(names = {"-pts", "--performanceTestMessageSize"}, description = "Performance test message size in Megabytes", required = false)
+	int performanceTestMessageSizeInMB = SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB();
+
+	@Parameter(names = {"-lp", "--performanceTestUseLargeMessageProxy"}, description = "Use the LargeMessageProxy pattern for performance tests", required = false, arity = 1)
+	boolean performanceTestUseLargeMessageProxy = SystemConfigurationSingleton.get().isPerformanceTestUseLargeMessageProxy();
+
 
 	public static void applyOn(String[] args) {
 		CommandMaster commandMaster = new CommandMaster();
