@@ -22,6 +22,9 @@ public abstract class Command {
 	@Parameter(names = {"-pts", "--performanceTestMessageSize"}, description = "Performance test message size in Megabytes", required = false)
 	int performanceTestMessageSizeInMB = SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB();
 
+	@Parameter(names = {"-lp", "--performanceTestUseLargeMessageProxy"}, description = "Use the LargeMessageProxy pattern for performance tests", required = false, arity = 1)
+	boolean performanceTestUseLargeMessageProxy = SystemConfigurationSingleton.get().isPerformanceTestUseLargeMessageProxy();
+
 
 	public static void applyOn(String[] args) {
 		CommandMaster commandMaster = new CommandMaster();

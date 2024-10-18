@@ -36,6 +36,8 @@ public class SystemConfiguration {
 
 	private int performanceTestMessageSizeInMB = 10; // The size of each message in performance tests in MB
 
+	private boolean performanceTestUseLargeMessageProxy = true; // Use the LargeMessageProxy pattern for performance tests
+
 	private static String getDefaultHost() {
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
@@ -54,6 +56,7 @@ public class SystemConfiguration {
 		this.hardMode = commandMaster.hardMode;
 		this.runningInKubernetes = commandMaster.runningInKubernetes;
 		this.performanceTestMessageSizeInMB = commandMaster.performanceTestMessageSizeInMB;
+		this.performanceTestUseLargeMessageProxy = commandMaster.performanceTestUseLargeMessageProxy;
 	}
 
 	public void update(CommandWorker commandWorker) {
@@ -65,6 +68,7 @@ public class SystemConfiguration {
 		this.runningInKubernetes = commandWorker.runningInKubernetes;
 		this.performanceTestMessageSizeInMB = commandWorker.performanceTestMessageSizeInMB;
 		this.performanceTestNumberOfMessagesFromWorker = commandWorker.performanceTestNumberOfMessagesFromWorker;
+		this.performanceTestUseLargeMessageProxy = commandWorker.performanceTestUseLargeMessageProxy;
 	}
 
 	public Config toAkkaConfig() {

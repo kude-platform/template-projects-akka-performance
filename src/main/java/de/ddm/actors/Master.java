@@ -46,9 +46,18 @@ public class Master extends AbstractBehavior<Master.Message> {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class DataMessage implements LargeMessageProxy.LargeMessage, Message {
+	public static class DataMessageWithLargeMessageProxy implements LargeMessageProxy.LargeMessage, Message {
 		private static final long serialVersionUID = -4667745204456518160L;
-		ActorRef<LargeMessageProxy.Message> senderLargeMessageProxy;
+		ActorRef<LargeMessageProxy.Message> workerLargeMessageProxy;
+		byte[] data;
+	}
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class DataMessageDirect implements Message {
+		private static final long serialVersionUID = 4133699272904372501L;
+		ActorRef<Worker.Message> worker;
 		byte[] data;
 	}
 
@@ -97,7 +106,8 @@ public class Master extends AbstractBehavior<Master.Message> {
 		return newReceiveBuilder()
 				.onMessage(StartMessage.class, this::handle)
 				.onMessage(RegistrationMessage.class, this::handle)
-				.onMessage(DataMessage.class, this::handle)
+				.onMessage(DataMessageWithLargeMessageProxy.class, this::handle)
+				.onMessage(DataMessageDirect.class, this::handle)
 				.onMessage(ShutdownMessage.class, this::handle)
 				.build();
 	}
@@ -112,22 +122,42 @@ public class Master extends AbstractBehavior<Master.Message> {
 		if (!this.workers.contains(worker)) {
 			this.workers.add(worker);
 			this.getContext().watch(worker);
-			sendBigMessageToWorker(message.getLargeMessageProxy());
+			if (SystemConfigurationSingleton.get().isPerformanceTestUseLargeMessageProxy()) {
+				sendMessageToWorkerUsingLargeMessageProxy(message.getLargeMessageProxy());
+			} else {
+				sendMessageToWorkerDirectly(worker);
+			}
+
 		}
 		return this;
 	}
 
-	private Behavior<Message> handle(DataMessage message) {
-		sendBigMessageToWorker(message.getSenderLargeMessageProxy());
+	private Behavior<Message> handle(DataMessageWithLargeMessageProxy message) {
+		sendMessageToWorkerUsingLargeMessageProxy(message.getWorkerLargeMessageProxy());
 		return this;
 	}
 
-	private void sendBigMessageToWorker(ActorRef<LargeMessageProxy.Message> workerMessageProxy) {
-		this.getContext().getLog().info("Sending a big message to a worker!");
+	private Behavior<Message> handle(DataMessageDirect message) {
+		sendMessageToWorkerDirectly(message.getWorker());
+		return this;
+	}
+
+	private void sendMessageToWorkerUsingLargeMessageProxy(ActorRef<LargeMessageProxy.Message> workerMessageProxy) {
+		this.getContext().getLog().info("Sending a message to a worker via the Large Message Proxy!");
+		byte[] data = generateDataMessage();
+		this.largeMessageProxy.tell(new LargeMessageProxy.SendMessage(new Worker.DataMessageWithLargeMessageProxy(this.largeMessageProxy, data), workerMessageProxy));
+	}
+
+	private void sendMessageToWorkerDirectly(ActorRef<Worker.Message> worker) {
+		this.getContext().getLog().info("Sending a message to a worker directly!");
+		byte[] data = generateDataMessage();
+		worker.tell(new Worker.DataMessageDirect(this.getContext().getSelf(), data));
+	}
+
+	private byte[] generateDataMessage() {
 		byte[] data = new byte[SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB() * 1024 * 1024];
 		this.random.nextBytes(data);
-		this.largeMessageProxy.tell(
-				new LargeMessageProxy.SendMessage(new Worker.DataMessage(this.largeMessageProxy, data), workerMessageProxy));
+		return data;
 	}
 
 	private Behavior<Message> handle(ShutdownMessage message) {

@@ -14,9 +14,12 @@ import de.ddm.singletons.SystemConfigurationSingleton;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class Worker extends AbstractBehavior<Worker.Message> {
 
 	////////////////////
@@ -42,9 +45,18 @@ public class Worker extends AbstractBehavior<Worker.Message> {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class DataMessage implements LargeMessageProxy.LargeMessage, Message {
+	public static class DataMessageWithLargeMessageProxy implements LargeMessageProxy.LargeMessage, Message {
 		private static final long serialVersionUID = -4667745204456518160L;
-		ActorRef<LargeMessageProxy.Message> senderLargeMessageProxy;
+		ActorRef<LargeMessageProxy.Message> masterLargeMessageProxy;
+		byte[] data;
+	}
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class DataMessageDirect implements Message {
+		private static final long serialVersionUID = 3206934676797075802L;
+		ActorRef<Master.Message> master;
 		byte[] data;
 	}
 
@@ -78,7 +90,11 @@ public class Worker extends AbstractBehavior<Worker.Message> {
 
 	private final Random random = new Random(4711);
 
+	private final int messageSizeInMB = SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB();
+
 	private int numberOfMessagesSent = 0;
+
+	private long performanceTestStartTime;
 
 	////////////////////
 	// Actor Behavior //
@@ -88,7 +104,8 @@ public class Worker extends AbstractBehavior<Worker.Message> {
 	public Receive<Message> createReceive() {
 		return newReceiveBuilder()
 				.onMessage(ReceptionistListingMessage.class, this::handle)
-				.onMessage(DataMessage.class, this::handle)
+				.onMessage(DataMessageWithLargeMessageProxy.class, this::handle)
+				.onMessage(DataMessageDirect.class, this::handle)
 				.onMessage(ShutdownMessage.class, this::handle)
 				.build();
 	}
@@ -99,20 +116,55 @@ public class Worker extends AbstractBehavior<Worker.Message> {
 		return this;
 	}
 
-	private Behavior<Message> handle(DataMessage message) {
-		sendBigMessageToMaster(message.getSenderLargeMessageProxy());
-		if (this.numberOfMessagesSent >= SystemConfigurationSingleton.get().getPerformanceTestNumberOfMessagesFromWorker())
-			this.getContext().getSystem().unsafeUpcast().tell(new Guardian.ShutdownMessage());
+	private Behavior<Message> handle(DataMessageWithLargeMessageProxy message) {
+		this.handleDataMessage(message.getMasterLargeMessageProxy());
 		return this;
 	}
 
-	private void sendBigMessageToMaster(ActorRef<LargeMessageProxy.Message> workerMessageProxy) {
-		this.getContext().getLog().info("Sending a big message to the master!");
+	private Behavior<Message> handle(DataMessageDirect message) {
+		this.handleDataMessage(message.getMaster());
+		return this;
+	}
+
+	private void handleDataMessage(ActorRef<?> sender) {
+		if (this.numberOfMessagesSent == 0) {
+			log.info("Starting performance analysis by sending messages to the master!");
+			this.performanceTestStartTime = System.nanoTime();
+		}
+
+		if (SystemConfigurationSingleton.get().isPerformanceTestUseLargeMessageProxy()) {
+			sendMessageToMasterUsingLargeMessageProxy((ActorRef<LargeMessageProxy.Message>) sender);
+		} else {
+			sendMessageToMasterDirectly((ActorRef<Master.Message>) sender);
+		}
+		this.numberOfMessagesSent++;
+
+		if (this.numberOfMessagesSent >= SystemConfigurationSingleton.get().getPerformanceTestNumberOfMessagesFromWorker()) {
+			long performanceTestEndTime = System.nanoTime();
+			long elapsedTimeInNanoSeconds = performanceTestEndTime - this.performanceTestStartTime;
+			log.info("Performance analysis finished! Sent {} messages (à {} MB) in {} ms.", this.numberOfMessagesSent,
+					this.messageSizeInMB, TimeUnit.MILLISECONDS.convert(elapsedTimeInNanoSeconds, TimeUnit.NANOSECONDS));
+			this.getContext().getSystem().unsafeUpcast().tell(new Guardian.ShutdownMessage());
+		}
+	}
+
+	private void sendMessageToMasterUsingLargeMessageProxy(ActorRef<LargeMessageProxy.Message> workerMessageProxy) {
+		this.getContext().getLog().info("Already sent {} messages. Sending another message to the master using the large message proxy!",
+				this.numberOfMessagesSent);
+		byte[] data = generateDataMessage();
+		this.largeMessageProxy.tell(new LargeMessageProxy.SendMessage(new Master.DataMessageWithLargeMessageProxy(this.largeMessageProxy, data), workerMessageProxy));
+	}
+
+	private void sendMessageToMasterDirectly(ActorRef<Master.Message> master) {
+		this.getContext().getLog().info("Already sent {} messages. Sending another message to the master directly!", this.numberOfMessagesSent);
+		byte[] data = generateDataMessage();
+		master.tell(new Master.DataMessageDirect(this.getContext().getSelf(), data));
+	}
+
+	private byte[] generateDataMessage() {
 		byte[] data = new byte[SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB() * 1024 * 1024];
 		this.random.nextBytes(data);
-		this.largeMessageProxy.tell(
-				new LargeMessageProxy.SendMessage(new Master.DataMessage(this.largeMessageProxy, data), workerMessageProxy));
-		this.numberOfMessagesSent++;
+		return data;
 	}
 
 	private Behavior<Message> handle(ShutdownMessage message) {

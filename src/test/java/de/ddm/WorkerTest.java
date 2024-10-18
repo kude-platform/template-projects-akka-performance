@@ -26,10 +26,10 @@ public class WorkerTest {
 		//given
 		final TestProbe<LargeMessageProxy.Message> probe = testKit.createTestProbe();
 		final ActorRef<Worker.Message> worker = testKit.spawn(Worker.create(), Worker.DEFAULT_NAME);
-		final Worker.DataMessage dataMessage = new Worker.DataMessage(probe.getRef(), new byte[24]);
+		final Worker.DataMessageWithLargeMessageProxy dataMessageWithLargeMessageProxy = new Worker.DataMessageWithLargeMessageProxy(probe.getRef(), new byte[24]);
 
 		//when
-		worker.tell(dataMessage);
+		worker.tell(dataMessageWithLargeMessageProxy);
 
 		//then
 		probe.expectMessageClass(LargeMessageProxy.ConnectMessage.class);
