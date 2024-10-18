@@ -23,9 +23,11 @@ public class Main {
 
 			guardian.tell(new Guardian.StartMessage());
 
-			waitForInput(">>> Press ENTER to exit <<<");
+			if (!config.isRunningInKubernetes()) {
+				waitForInput(">>> Press ENTER to exit <<<");
+				guardian.tell(new Guardian.ShutdownMessage());
+			}
 
-			guardian.tell(new Guardian.ShutdownMessage());
 		}
 	}
 
