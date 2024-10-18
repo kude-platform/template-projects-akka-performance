@@ -19,6 +19,7 @@ public class WorkerTest {
 	@Before
 	public void setUp() {
 		testKit.spawn(Reaper.create(), Reaper.DEFAULT_NAME);
+		SystemConfigurationSingleton.get().setPerformanceTestMessageSizeInMB(1);
 	}
 
 	@Test
