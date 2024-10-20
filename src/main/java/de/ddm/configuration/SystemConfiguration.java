@@ -24,6 +24,8 @@ public class SystemConfiguration {
 	private String masterHost = getDefaultHost();      // The host name or IP of the master; if this is a master, masterHost = host
 	private int masterPort = DEFAULT_MASTER_PORT;      // The port of the master; if this is a master, masterPort = port
 
+	private String ipAddress = getDefaultHost();            // The IP address of this machine
+
 	private String actorSystemName = "ddm";            // The name of this application
 
 	private boolean startPaused = false;               // Wait for some console input to start; useful, if we want to wait manually until all ActorSystems in the cluster are started (e.g. to avoid work stealing effects in performance evaluations)
@@ -50,6 +52,7 @@ public class SystemConfiguration {
 		this.role = MASTER_ROLE;
 		this.host = commandMaster.host;
 		this.port = commandMaster.port;
+		this.ipAddress = commandMaster.ipAddress;
 		this.masterHost = commandMaster.host;
 		this.masterPort = commandMaster.port;
 		this.startPaused = commandMaster.startPaused;
@@ -63,6 +66,7 @@ public class SystemConfiguration {
 		this.role = WORKER_ROLE;
 		this.host = commandWorker.host;
 		this.port = commandWorker.port;
+		this.ipAddress = commandWorker.ipAddress;
 		this.masterHost = commandWorker.masterhost;
 		this.masterPort = commandWorker.masterport;
 		this.runningInKubernetes = commandWorker.runningInKubernetes;
@@ -76,7 +80,7 @@ public class SystemConfiguration {
 				"akka.remote.artery.canonical.hostname = \"" + this.host + "\"\n" +
 				"akka.remote.artery.canonical.port = " + this.port + "\n" +
 						(this.runningInKubernetes ?
-								"akka.remote.artery.bind.hostname = \"" + getDefaultHost() + "\"\n" +
+								"akka.remote.artery.bind.hostname = \"" + this.ipAddress + "\"\n" +
 										"akka.remote.artery.bind.port = " + this.port + "\n" : "") +
 				"akka.cluster.roles = [" + this.role + "]\n" +
 				"akka.cluster.seed-nodes = [\"akka://" + this.actorSystemName + "@" + this.masterHost + ":" + this.masterPort + "\"]")
