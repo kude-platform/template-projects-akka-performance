@@ -13,7 +13,7 @@ public abstract class Command {
 	@Parameter(names = {"-h", "--host"}, description = "This machine's host name or IP that we use to bind this application against", required = false)
 	String host = SystemConfigurationSingleton.get().getHost();
 
-	@Parameter(names = {"-ip", "--ipAddress"}, description = "This machine's IP that we use to bind this application against", required = false)
+	@Parameter(names = {"-ia", "--ipAddress"}, description = "This machine's IP that we use to bind this application against", required = false)
 	String ipAddress = SystemConfigurationSingleton.get().getIpAddress();
 
 	@Parameter(names = {"-p", "--port"}, description = "This machines port that we use to bind this application against", required = false)
