@@ -31,6 +31,9 @@ public abstract class Command {
 	@Parameter(names = {"-ptls", "--performanceTestLogMessageSizeInBytes"}, description = "Performance test log message size in bytes", required = false)
 	int performanceTestLogMessageSizeInBytes = SystemConfigurationSingleton.get().getPerformanceTestLogMessageSizeInBytes();
 
+	@Parameter(names = {"-w", "--numWorkers"}, description = "The number of workers (indexers/validators) to start locally; should be at least one if the algorithm is started standalone (otherwise there are no workers to run the discovery)", required = false)
+	int numWorkers = 1;
+
 
 	public static void applyOn(String[] args) {
 		CommandMaster commandMaster = new CommandMaster();
