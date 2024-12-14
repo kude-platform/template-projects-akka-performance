@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -152,17 +153,31 @@ public class Worker extends AbstractBehavior<Worker.Message> {
 		this.getContext().getLog().info("Already sent {} messages. Sending another message to the master using the large message proxy!",
 				this.numberOfMessagesSent);
 		byte[] data = generateDataMessage();
+
+		writePerformanceTestLogMessagesIfApplicable();
 		this.largeMessageProxy.tell(new LargeMessageProxy.SendMessage(new Master.DataMessageWithLargeMessageProxy(this.largeMessageProxy, data), workerMessageProxy));
 	}
 
 	private void sendMessageToMasterDirectly(ActorRef<Master.Message> master) {
 		this.getContext().getLog().info("Already sent {} messages. Sending another message to the master directly!", this.numberOfMessagesSent);
 		byte[] data = generateDataMessage();
+		writePerformanceTestLogMessagesIfApplicable();
 		master.tell(new Master.DataMessageDirect(this.getContext().getSelf(), data));
 	}
 
+	private void writePerformanceTestLogMessagesIfApplicable() {
+		if (SystemConfigurationSingleton.get().getPerformanceTestLogMessageSizeInBytes() > 0) {
+			this.getContext().getLog().info("Random test log message {}",
+					Base64.getEncoder().encodeToString(generateRandomByteArray(SystemConfigurationSingleton.get().getPerformanceTestLogMessageSizeInBytes())));
+		}
+	}
+
 	private byte[] generateDataMessage() {
-		byte[] data = new byte[SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB() * 1024 * 1024];
+		return generateRandomByteArray(SystemConfigurationSingleton.get().getPerformanceTestMessageSizeInMB() * 1024 * 1024);
+	}
+
+	private byte[] generateRandomByteArray(final int size) {
+		byte[] data = new byte[size];
 		this.random.nextBytes(data);
 		return data;
 	}

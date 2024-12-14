@@ -40,6 +40,8 @@ public class SystemConfiguration {
 
 	private boolean performanceTestUseLargeMessageProxy = true; // Use the LargeMessageProxy pattern for performance tests
 
+	private int performanceTestLogMessageSizeInBytes = 0; // The size of log messages that are written for test purposes in performance tests in Byte
+
 	private static String getDefaultHost() {
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
@@ -50,21 +52,22 @@ public class SystemConfiguration {
 
 	public void update(CommandMaster commandMaster) {
 		this.role = MASTER_ROLE;
-		this.host = commandMaster.host;
+		this.host = commandMaster.hostname;
 		this.port = commandMaster.port;
 		this.ipAddress = commandMaster.ipAddress;
-		this.masterHost = commandMaster.host;
+		this.masterHost = commandMaster.hostname;
 		this.masterPort = commandMaster.port;
 		this.startPaused = commandMaster.startPaused;
 		this.hardMode = commandMaster.hardMode;
 		this.runningInKubernetes = commandMaster.runningInKubernetes;
 		this.performanceTestMessageSizeInMB = commandMaster.performanceTestMessageSizeInMB;
 		this.performanceTestUseLargeMessageProxy = commandMaster.performanceTestUseLargeMessageProxy;
+		this.performanceTestLogMessageSizeInBytes = commandMaster.performanceTestLogMessageSizeInBytes;
 	}
 
 	public void update(CommandWorker commandWorker) {
 		this.role = WORKER_ROLE;
-		this.host = commandWorker.host;
+		this.host = commandWorker.hostname;
 		this.port = commandWorker.port;
 		this.ipAddress = commandWorker.ipAddress;
 		this.masterHost = commandWorker.masterhost;
@@ -73,6 +76,7 @@ public class SystemConfiguration {
 		this.performanceTestMessageSizeInMB = commandWorker.performanceTestMessageSizeInMB;
 		this.performanceTestNumberOfMessagesFromWorker = commandWorker.performanceTestNumberOfMessagesFromWorker;
 		this.performanceTestUseLargeMessageProxy = commandWorker.performanceTestUseLargeMessageProxy;
+		this.performanceTestLogMessageSizeInBytes = commandWorker.performanceTestLogMessageSizeInBytes;
 	}
 
 	public Config toAkkaConfig() {

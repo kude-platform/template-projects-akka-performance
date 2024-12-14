@@ -10,8 +10,8 @@ public abstract class Command {
 
 	abstract int getDefaultPort();
 
-	@Parameter(names = {"-h", "--host"}, description = "This machine's host name or IP that we use to bind this application against", required = false)
-	String host = SystemConfigurationSingleton.get().getHost();
+	@Parameter(names = {"-h", "--host"}, description = "This machine's host name that we use to bind this application against", required = false)
+	String hostname = SystemConfigurationSingleton.get().getHost();
 
 	@Parameter(names = {"-ia", "--ipAddress"}, description = "This machine's IP that we use to bind this application against", required = false)
 	String ipAddress = SystemConfigurationSingleton.get().getIpAddress();
@@ -27,6 +27,9 @@ public abstract class Command {
 
 	@Parameter(names = {"-lp", "--performanceTestUseLargeMessageProxy"}, description = "Use the LargeMessageProxy pattern for performance tests", required = false, arity = 1)
 	boolean performanceTestUseLargeMessageProxy = SystemConfigurationSingleton.get().isPerformanceTestUseLargeMessageProxy();
+
+	@Parameter(names = {"-ptls", "--performanceTestLogMessageSizeInBytes"}, description = "Performance test log message size in bytes", required = false)
+	int performanceTestLogMessageSizeInBytes = SystemConfigurationSingleton.get().getPerformanceTestLogMessageSizeInBytes();
 
 
 	public static void applyOn(String[] args) {
